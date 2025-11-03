@@ -114,9 +114,11 @@ async function processMessageWithGemini(message, menu, menuUrl, lastOrder, conve
       "",
       "**Contexto da Conversa:**",
       "- **Informações da Loja:**",
-      "  - Horário: " + (businessInfo?.hours || 'Não informado'),
+      "  - Nome do Restaurante: " + (businessInfo?.restaurantName || 'Não informado'),
+      "  - Mensagem de Boas Vindas: " + (businessInfo?.welcomeMessage || 'Olá! Bem-vindo ao nosso restaurante.'),
+      "  - Horário: " + (businessInfo?.openingHours || 'Não informado'),
       "  - Endereço: " + (businessInfo?.address || 'Não informado'),
-      "  - Telefone: " + (businessInfo?.phoneNumber || 'Não informado'),
+      "  - Telefone de Contato: " + (businessInfo?.contactPhone || 'Não informado'),
       (conversationContext ? '- **Sua Pergunta Anterior Para o Cliente:** "' + conversationContext + '"\n' : ''),
       "- **Cardápio:** [" + (menu || 'Pizzas, Lanches, Refrigerantes') + "]",
       "- **Último Pedido do Cliente:** " + (lastOrder && lastOrder.items && lastOrder.items.length > 0 ? "O cliente pediu " + lastOrder.items.map(function(i) { return i.name; }).join(', ') + " em " + new Date(lastOrder.createdAt).toLocaleDateString('pt-BR') + "." : 'Este é um novo cliente.'),
@@ -159,8 +161,8 @@ async function processMessageWithGemini(message, menu, menuUrl, lastOrder, conve
       "",
       "5.  **Se for uma SAUDAÇÃO (para um cliente novo):**",
       "    -   O \"type\" deve ser **\"reply\"**.",
-      "    -   O \"data\" deve ser uma string com a resposta amigável.",
-      "    -   **Exemplo (saudação):** { \"type\": \"reply\", \"data\": \"Olá! Bem-vindo ao JataíFood. Como posso ajudar?\" }",
+      "    -   O \"data\" deve ser o valor exato da \"Mensagem de Boas Vindas\" que está nas \"Informações da Loja\".",
+      "    -   **Exemplo de JSON resultante:** { \"type\": \"reply\", \"data\": \"Olá! Seja bem-vindo à Pizzaria do Zé. Como posso ajudar?\" }",
       "",
       "6.  **Se for uma CONVERSA CURTA e social (ex: \"obrigado\", \"ok\", \"de nada\", \"blz\"):**",
       "    -   O \"type\" deve ser **\"reply\"**.",
@@ -350,9 +352,8 @@ function setupMessageListener(client, username) {
       const businessInfo = await getBusinessInfoFromFirebase(username);
       const lastOrder = await getLastOrder(username, msg.from);
 
-      const baseUrl = cachedConfig.menuUrl || 'https://jataifood.vercel.app/pedido';
-      const personalizedMenuUrl = baseUrl + '/' + username; // Adiciona o username ao final do link
-      const aiResponse = await processMessageWithGemini(userMessage, menu, personalizedMenuUrl, lastOrder, contextForGemini, businessInfo);
+      const menuUrl = cachedConfig.menuUrl || 'https://jataifood.vercel.app/pedido/' + username;
+      const aiResponse = await processMessageWithGemini(userMessage, menu, menuUrl, lastOrder, contextForGemini, businessInfo);
       
       // Se a IA falhou (ex: erro de API, 404), aiResponse será null
       if (aiResponse === null) {

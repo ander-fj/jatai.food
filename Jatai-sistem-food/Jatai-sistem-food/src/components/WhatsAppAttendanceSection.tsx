@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Save, RefreshCw, AlertCircle, Phone, Power, QrCode, Wifi, WifiOff, Link } from 'lucide-react';
+import { MessageCircle, Save, RefreshCw, AlertCircle, Phone, Power, QrCode, Wifi, WifiOff, Link, Building, Clock, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { ref, set, get } from 'firebase/database';
 import { database } from '../config/firebase';
 
 interface WhatsAppConfig {
   isActive: boolean;
-  phoneNumber?: string;
+  restaurantName?: string;
+  phoneNumber?: string; // Telefone de contato
   menuUrl?: string;
   hours?: string;
   address?: string;
+  welcomeMessage?: string;
 }
 
 
@@ -25,10 +27,12 @@ const WhatsAppAttendanceSection: React.FC = () => {
   const username = localStorage.getItem('username') || 'A';
   const [config, setConfig] = useState<WhatsAppConfig>({
     isActive: false,
+    restaurantName: '',
     phoneNumber: '',
     menuUrl: '',
     hours: '',
     address: '',
+    welcomeMessage: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,10 +110,12 @@ const WhatsAppAttendanceSection: React.FC = () => {
     try {      
       const dataToSave = {
         isActive: config.isActive,
+        restaurantName: config.restaurantName || '',
         phoneNumber: config.phoneNumber || '',
         menuUrl: config.menuUrl || '',
         hours: config.hours || '',
         address: config.address || '',
+        welcomeMessage: config.welcomeMessage || '',
         updatedAt: new Date().toISOString()
       };
       
@@ -372,6 +378,21 @@ const WhatsAppAttendanceSection: React.FC = () => {
       <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Configurações</h3>
         
+        {/* Nome do Restaurante */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <Building className="h-4 w-4" />
+            Nome do Restaurante
+          </label>
+          <input
+            type="text"
+            value={config.restaurantName || ''}
+            onChange={(e) => setConfig({ ...config, restaurantName: e.target.value })}
+            placeholder="Ex: Pizzaria do Zé"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
         {/* Phone Number */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -393,7 +414,7 @@ const WhatsAppAttendanceSection: React.FC = () => {
         {/* Horário de Funcionamento */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Phone className="h-4 w-4" />
+            <Clock className="h-4 w-4" />
             Horário de Funcionamento
           </label>
           <input
@@ -408,19 +429,16 @@ const WhatsAppAttendanceSection: React.FC = () => {
         {/* Endereço */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Phone className="h-4 w-4" />
+            <MapPin className="h-4 w-4" />
             Endereço
           </label>
           <input
             type="text"
             value={config.address || ''}
             onChange={(e) => setConfig({ ...config, address: e.target.value })}
-            placeholder="Rua das Flores, 123, Centro"
+            placeholder="Rua das Pizzas, 123, Bairro Saboroso"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Digite o número do WhatsApp que receberá os pedidos
-          </p>
         </div>
 
         {/* Menu URL */}
@@ -439,6 +457,22 @@ const WhatsAppAttendanceSection: React.FC = () => {
           <p className="text-xs text-gray-500 mt-1">
             Este é o link que o agente enviará quando o cliente pedir o cardápio.
           </p>
+        </div>
+
+        {/* Mensagem de Boas-Vindas */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            <MessageSquare className="h-4 w-4" />
+            Mensagem de Boas-Vindas
+          </label>
+          <textarea
+            value={config.welcomeMessage || ''}
+            onChange={(e) => setConfig({ ...config, welcomeMessage: e.target.value })}
+            placeholder="Olá! Bem-vindo à {restaurantName}. Como posso ajudar?"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            rows={3}
+          />
+          <p className="text-xs text-gray-500 mt-1">Use {'{restaurantName}'} para inserir o nome do restaurante automaticamente.</p>
         </div>
 
         {/* Action Buttons */}
@@ -465,14 +499,6 @@ const WhatsAppAttendanceSection: React.FC = () => {
           <li className="flex gap-2">
             <span className="font-bold">2.</span>
             <span>Clique em "Salvar Configurações"</span>
-          </li>
-            <li className="flex gap-2">
-            <span className="font-bold">4.</span>
-            <span>Ative o atendimento usando o botão de toggle</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">5.</span>
-            <span>Quando um cliente enviar uma mensagem, a IA Gemini processará o pedido e criará automaticamente no sistema</span>
           </li>
         </ol>
       </div>

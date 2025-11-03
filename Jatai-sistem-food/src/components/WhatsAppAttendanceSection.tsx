@@ -9,6 +9,12 @@ interface WhatsAppConfig {
   phoneNumber: string;
   isActive: boolean;
   geminiApiKey: string;
+  restaurantName?: string;
+  welcomeMessage?: string;
+  contactPhone?: string;
+  address?: string;
+  openingHours?: string;
+  menuUrl?: string;
 }
 
 interface ConnectionStatus {
@@ -24,7 +30,13 @@ const WhatsAppAttendanceSection: React.FC = () => {
   const [config, setConfig] = useState<WhatsAppConfig>({
     phoneNumber: '',
     isActive: false,
-    geminiApiKey: ''
+    geminiApiKey: '',
+    restaurantName: '',
+    welcomeMessage: '',
+    contactPhone: '',
+    address: '',
+    openingHours: '',
+    menuUrl: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -116,6 +128,48 @@ const WhatsAppAttendanceSection: React.FC = () => {
     } finally {
       setIsSaving(false);
       console.log('🏁 SaveConfig finalizado');
+    }
+  };
+
+  const handleToggleActive = async (newIsActive: boolean) => {
+    if (!username) return;
+
+    if (newIsActive) {
+      // Run validations before activating
+      if (!config.phoneNumber) {
+        toast.error('Por favor, insira o número do WhatsApp antes de ativar.');
+        return;
+      }
+      if (!config.geminiApiKey) {
+        toast.error('Por favor, insira a chave da API do Gemini antes de ativar.');
+        return;
+      }
+    }
+
+    const originalIsActive = config.isActive;
+    // Optimistic update
+    setConfig({ ...config, isActive: newIsActive });
+
+    try {
+      const configRef = ref(database, `tenants/${username}/whatsappConfig`);
+      const snapshot = await get(configRef);
+      const existingConfig = snapshot.val() || {};
+
+      const dataToSave = {
+        ...existingConfig,
+        ...config,
+        isActive: newIsActive,
+        updatedAt: new Date().toISOString()
+      };
+
+      await set(configRef, dataToSave);
+      toast.success(`Atendimento ${newIsActive ? 'ativado' : 'desativado'} com sucesso!`);
+
+    } catch (error) {
+      console.error('Erro ao salvar configuração do toggle:', error);
+      toast.error('Erro ao salvar configuração.');
+      // Rollback on error
+      setConfig({ ...config, isActive: originalIsActive });
     }
   };
 
@@ -291,7 +345,7 @@ const WhatsAppAttendanceSection: React.FC = () => {
             <input
               type="checkbox"
               checked={config.isActive}
-              onChange={(e) => setConfig({ ...config, isActive: e.target.checked })}
+              onChange={(e) => handleToggleActive(e.target.checked)}
               className="sr-only peer"
             />
             <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
@@ -363,22 +417,87 @@ const WhatsAppAttendanceSection: React.FC = () => {
           </p>
         </div>
 
-        {/* Gemini API Key */}
+        {/* Restaurant Name */}
         <div>
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            <Bot className="h-4 w-4" />
-            Chave da API do Gemini
+            Nome do Restaurante
           </label>
           <input
-            type="password"
-            value={config.geminiApiKey}
-            onChange={(e) => setConfig({ ...config, geminiApiKey: e.target.value })}
-            placeholder="AIza..."
+            type="text"
+            value={config.restaurantName}
+            onChange={(e) => setConfig({ ...config, restaurantName: e.target.value })}
+            placeholder="Pizzaria do Zé"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Obtenha sua chave em: <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">Google AI Studio</a>
-          </p>
+        </div>
+
+        {/* Welcome Message */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            Mensagem de boas vindas!
+          </label>
+          <textarea
+            value={config.welcomeMessage}
+            onChange={(e) => setConfig({ ...config, welcomeMessage: e.target.value })}
+            placeholder="Olá! Seja bem-vindo à Pizzaria do Zé. Como posso ajudar?"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Address */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            Endereço
+          </label>
+          <input
+            type="text"
+            value={config.address}
+            onChange={(e) => setConfig({ ...config, address: e.target.value })}
+            placeholder="Rua das Pizzas, 123, Centro"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Opening Hours */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            Horário de atendimento
+          </label>
+          <input
+            type="text"
+            value={config.openingHours}
+            onChange={(e) => setConfig({ ...config, openingHours: e.target.value })}
+            placeholder="Segunda a Sexta, das 18h às 23h"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Contact Phone */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            Telefone de Contato
+          </label>
+          <input
+            type="text"
+            value={config.contactPhone}
+            onChange={(e) => setConfig({ ...config, contactPhone: e.target.value })}
+            placeholder="(64) 99999-9999"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        {/* Menu URL */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+            Link do Cardápio
+          </label>
+          <input
+            type="text"
+            value={config.menuUrl}
+            onChange={(e) => setConfig({ ...config, menuUrl: e.target.value })}
+            placeholder="https://seucardapio.com"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
         </div>
 
         {/* Action Buttons */}
@@ -400,49 +519,23 @@ const WhatsAppAttendanceSection: React.FC = () => {
         <ol className="space-y-2 text-sm text-blue-800">
           <li className="flex gap-2">
             <span className="font-bold">1.</span>
-            <span>Configure seu número do WhatsApp e a chave da API do Gemini acima</span>
+            <span>Configure seu número do WhatsApp acima</span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold">2.</span>
             <span>Clique em "Salvar Configurações"</span>
           </li>
+          
           <li className="flex gap-2">
             <span className="font-bold">3.</span>
-            <span>Clique em "Conectar WhatsApp" e escaneie o QR Code com seu celular</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-bold">4.</span>
             <span>Ative o atendimento usando o botão de toggle</span>
           </li>
           <li className="flex gap-2">
-            <span className="font-bold">5.</span>
+            <span className="font-bold">4.</span>
             <span>Quando um cliente enviar uma mensagem, a IA Gemini processará o pedido e criará automaticamente no sistema</span>
           </li>
         </ol>
       </div>
-
-      {/* Example Message */}
-      <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Exemplo de mensagem do cliente:</h3>
-        <div className="bg-white rounded-lg p-4 border border-gray-300">
-          <p className="text-sm text-gray-700 whitespace-pre-line">
-            {`Olá! Gostaria de fazer um pedido:
-
-- 1 Pizza Grande de Calabresa
-- 1 Pizza Média de Mussarela  
-- 2 Coca-Cola 2L
-
-Entregar na Rua das Flores, 123, Centro
-Nome: João Silva
-Telefone: (64) 99999-9999
-Pagamento: Dinheiro`}
-          </p>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          A IA Gemini irá extrair automaticamente os itens, endereço, dados do cliente e forma de pagamento
-        </p>
-      </div>
-
       {/* Server Status Warning */}
       {!connectionStatus.isConnected && (
         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">

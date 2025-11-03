@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pizza, Plus, ArrowLeft, LogOut, Trash2, Search, X, Package, Settings, Menu as MenuIcon, Tag, BarChart2, Smile, ChevronDown, ChevronUp, PenSquare, ChevronLeft, Route, ExternalLink, ChefHat, Utensils, DollarSign, PanelLeftClose, PanelRightClose, MessageSquare } from 'lucide-react';
+import { Pizza, Plus, ArrowLeft, LogOut, Trash2, Search, X, Package, Settings, Menu as MenuIcon, Tag, BarChart2, Smile, ChevronDown, ChevronUp, PenSquare, ChevronLeft, Route, ExternalLink, ChefHat, Utensils, DollarSign, PanelLeftClose, PanelRightClose } from 'lucide-react';
 import { useNavigate, useParams, Navigate, Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import AdminDeliveryMap from '../components/AdminDeliveryMap';
@@ -8,7 +8,6 @@ import AdminEntregadorSelector from '../components/AdminEntregadorSelector';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import SystemConfigurationModal from '../components/SystemConfigurationModal';
 import WhatsAppPromotionSection from '../components/WhatsAppPromotionSection';
-import WhatsAppAttendanceSection from '../components/WhatsAppAttendanceSection';
 import AdminJokesManagement from '../components/AdminJokesManagement';
 import OrderStatusSection from '../features/orders/components/OrderStatusSection';
 import NewOrderModal from '../features/orders/components/NewOrderModal';
@@ -82,7 +81,6 @@ const SIDEBAR_TABS = [
     { id: 'promocoes', label: 'Promoções', icon: Tag },
     { id: 'analytics', label: 'Relatórios', icon: BarChart2 },
     { id: 'piadas', label: 'Piadas', icon: Smile },
-    { id: 'atendimento', label: 'Atendimento', icon: MessageSquare },
     { id: 'configuracoes', label: 'Configurações', icon: Settings }
 ] as const;
 
@@ -351,14 +349,6 @@ const AdminPage: React.FC = () => {
           </Link>
           {SIDEBAR_TABS.map(tab => {
               const Icon = tab.icon;
-              if (tab.id === 'whatsapp') {
-                return (
-                  <Link to="/whatsapp" target="_blank" key={tab.id} className={`flex items-center px-4 py-2 rounded-md text-gray-300 hover:bg-gray-700 hover:text-white'}`}>
-                      <Icon className={`${isSidebarCollapsed ? '' : 'mr-3'}`} {...iconProps}/>
-                      {!isSidebarCollapsed && <span>{tab.label}</span>}
-                  </Link>
-                )
-              }
               return (
                 <a href="#" key={tab.id} onClick={() => handleTabChange(tab.id)} className={`flex items-center px-4 py-2 rounded-md ${activeTab === tab.id ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>
                     <Icon className={`${isSidebarCollapsed ? '' : 'mr-3'}`} {...iconProps}/>
@@ -489,7 +479,6 @@ const AdminPage: React.FC = () => {
           <div className={activeTab === 'promocoes' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><h2 className="text-2xl font-bold mb-4">Promoções via WhatsApp</h2><WhatsAppPromotionSection /></div></div>
           <div className={activeTab === 'analytics' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><AnalyticsDashboard orders={orders} deliveryStaff={deliveryStaff} /></div></div>
           <div className={activeTab === 'piadas' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><h2 className="text-2xl font-bold mb-4">Gerenciamento de Piadas</h2><AdminJokesManagement /></div></div>
-          <div className={activeTab === 'atendimento' ? '' : 'hidden'}><WhatsAppAttendanceSection /></div>
           <div className={activeTab === 'configuracoes' ? '' : 'hidden'}>
             <div className="p-6 bg-white rounded-lg shadow-sm">
               <div className="text-center">

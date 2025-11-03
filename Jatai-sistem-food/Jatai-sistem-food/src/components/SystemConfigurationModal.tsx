@@ -14,9 +14,7 @@ import {
   Upload,
   DollarSign,
   Percent,
-  Bike,
-  Store,
-  Clock
+  Bike
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTenantRef } from '../config/firebase';
@@ -69,7 +67,6 @@ const SystemConfigurationModal: React.FC<SystemConfigurationModalProps> = ({
     window.dispatchEvent(new Event('fees-updated'));
     console.log('💰 Saved fees to Firebase and localStorage');
   };
-
 
   const colorPresets = [
     { name: 'Pizzaria Clássica', primary: '#DC2626', secondary: '#EA580C', accent: '#059669' },
@@ -266,7 +263,7 @@ const SystemConfigurationModal: React.FC<SystemConfigurationModalProps> = ({
                     
                     {/* Color Presets */}
                     <div className="mb-8">
-                      <h4 className="text-lg font-medium mb-4">Temas Prontos</h4>
+                      <h4 className="text-lg font-medium mb-4">Presets de Cores</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {colorPresets.map((preset) => (
                           <button
@@ -436,7 +433,7 @@ const SystemConfigurationModal: React.FC<SystemConfigurationModalProps> = ({
                     </div>
                     {/* Live Color Preview */}
                     <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-lg font-medium mb-3">Visualização das Cores</h4>
+                      <h4 className="text-lg font-medium mb-3">Prévia das Cores</h4>
                       <div className="flex gap-4 items-center">
                         <div 
                           className="w-16 h-16 rounded-lg shadow-md flex items-center justify-center text-white font-bold"
@@ -572,7 +569,7 @@ const SystemConfigurationModal: React.FC<SystemConfigurationModalProps> = ({
 
                     {/* Font Preview */}
                     <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-lg font-medium mb-3">Visualização da Fonte</h4>
+                      <h4 className="text-lg font-medium mb-3">Prévia da Fonte</h4>
                       <div 
                         style={{ 
                           fontFamily: theme.fontFamily,
@@ -779,7 +776,7 @@ const SystemConfigurationModal: React.FC<SystemConfigurationModalProps> = ({
 
                     {/* Animation Preview */}
                     <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-lg font-medium mb-3">Visualização das Animações</h4>
+                      <h4 className="text-lg font-medium mb-3">Prévia das Animações</h4>
                       <div className="flex gap-4">
                         <button 
                           className="px-4 py-2 text-white rounded-lg transition-all transform hover:scale-105"
@@ -854,7 +851,7 @@ const SystemConfigurationModal: React.FC<SystemConfigurationModalProps> = ({
 
                     {/* Icon Preview */}
                     <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-lg font-medium mb-3">Visualização do Ícone</h4>
+                      <h4 className="text-lg font-medium mb-3">Prévia do Ícone</h4>
                       <div className="flex items-center gap-4">
                         {theme.systemIcon ? (
                           <div className="flex items-center gap-4">
@@ -906,7 +903,7 @@ const SystemConfigurationModal: React.FC<SystemConfigurationModalProps> = ({
           {/* Live Preview */}
           <div className="w-80 bg-gray-50 border-l border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium text-gray-700">Visualização ao Vivo</h4>
+              <h4 className="font-medium text-gray-700">Prévia ao Vivo</h4>
               <Eye className="h-5 w-5 text-gray-500" />
             </div>
             
