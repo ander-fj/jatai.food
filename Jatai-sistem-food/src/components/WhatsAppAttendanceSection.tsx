@@ -180,7 +180,16 @@ const WhatsAppAttendanceSection: React.FC = () => {
       const response = await fetch(`${WHATSAPP_SERVER_URL}/api/whatsapp/status/${username}`);
       if (response.ok) {
         const data = await response.json();
-        setConnectionStatus(data);
+        
+        // Mapear status do backend para o frontend
+        const mappedStatus = {
+          ...data,
+          status: data.status === 'pending_qr' ? 'qr_code' : data.status,
+          hasQrCode: data.status === 'pending_qr' || data.status === 'qr_code',
+          isConnected: data.status === 'connected' || data.status === 'authenticated'
+        };
+        
+        setConnectionStatus(mappedStatus);
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
@@ -195,44 +204,16 @@ const WhatsAppAttendanceSection: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.qr) {
-          setQrCode(data.qr);
+          // Converter texto do QR para data URL usando biblioteca qrcode
+          const QRCode = (await import('qrcode')).default;
+          const qrDataUrl = await QRCode.toDataURL(data.qr);
+          setQrCode(qrDataUrl);
         } else {
           setQrCode(null);
         }
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
-    }
-  };
-
-  const connectWhatsApp = async () => {
-    if (!username) return;
-    
-    if (!config.geminiApiKey) {
-      toast.error('Configure a chave da API do Gemini antes de conectar');
-      return;
-    }
-
-    setIsConnecting(true);
-    try {
-      const response = await fetch(`${WHATSAPP_SERVER_URL}/api/whatsapp/start/${username}`, {
-        method: 'POST'
-      });
-
-      if (response.ok) {
-        toast.success('Iniciando conexão com WhatsApp...');
-        setTimeout(() => {
-          fetchQrCode();
-          checkConnectionStatus();
-        }, 2000);
-      } else {
-        toast.error('Erro ao iniciar conexão');
-      }
-    } catch (error) {
-      console.error('Erro ao conectar WhatsApp:', error);
-      toast.error('Erro ao conectar. Verifique se o servidor está rodando.');
-    } finally {
-      setIsConnecting(false);
     }
   };
 
