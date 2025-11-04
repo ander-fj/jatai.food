@@ -29,18 +29,26 @@ interface AnalyticsDashboardProps {
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliveryStaff }) => {
   const { theme } = useTheme();
 
+  console.log("AnalyticsDashboard: Pedidos recebidos", orders);
+
   // Estatísticas gerais
   const stats = useMemo(() => {
     const safeOrders = orders || [];
     
-    const totalOrders = safeOrders.length;
-    const totalRevenue = safeOrders.reduce((sum, order) => {
+    // Lista de status válidos do sistema
+    const validStatuses = ['Novo', 'Preparando', 'Pronto para Entrega', 'A caminho', 'Entregue', 'Cancelado'];
+    
+    // Filtrar apenas pedidos com status válidos
+    const validOrders = safeOrders.filter(order => validStatuses.includes(order.status));
+    
+    const totalOrders = validOrders.length;
+    const totalRevenue = validOrders.reduce((sum, order) => {
       const orderTotal = (order.items || []).reduce((itemSum, item) => itemSum + (item.price || 0), 0);
       return sum + orderTotal;
     }, 0);
     
-    const deliveredOrders = safeOrders.filter(order => order.status === 'Entregue').length;
-    const pendingOrders = safeOrders.filter(order => 
+    const deliveredOrders = validOrders.filter(order => order.status === 'Entregue').length;
+    const pendingOrders = validOrders.filter(order => 
       order.status !== 'Entregue' && order.status !== 'Cancelado'
     ).length;
     
@@ -61,22 +69,35 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
   const ordersByStatus = useMemo(() => {
     const safeOrders = orders || [];
     
+    // Lista de status válidos do sistema
+    const validStatuses = ['Novo', 'Preparando', 'Pronto para Entrega', 'A caminho', 'Entregue', 'Cancelado'];
+    
+    // Filtrar apenas pedidos com status válidos
+    const validOrders = safeOrders.filter(order => validStatuses.includes(order.status));
+    
     return {
-      'Novo': safeOrders.filter(order => order.status === 'Novo').length,
-      'Preparando': safeOrders.filter(order => order.status === 'Preparando').length,
-      'Pronto para Entrega': safeOrders.filter(order => order.status === 'Pronto para Entrega').length,
-      'A caminho': safeOrders.filter(order => order.status === 'A caminho').length,
-      'Entregue': safeOrders.filter(order => order.status === 'Entregue').length,
-      'Cancelado': safeOrders.filter(order => order.status === 'Cancelado').length
+      'Novo': validOrders.filter(order => order.status === 'Novo').length,
+      'Preparando': validOrders.filter(order => order.status === 'Preparando').length,
+      'Pronto para Entrega': validOrders.filter(order => order.status === 'Pronto para Entrega').length,
+      'A caminho': validOrders.filter(order => order.status === 'A caminho').length,
+      'Entregue': validOrders.filter(order => order.status === 'Entregue').length,
+      'Cancelado': validOrders.filter(order => order.status === 'Cancelado').length
     };
   }, [orders]);
 
   // Top produtos mais vendidos
   const topProducts = useMemo(() => {
     const safeOrders = orders || [];
+    
+    // Lista de status válidos do sistema
+    const validStatuses = ['Novo', 'Preparando', 'Pronto para Entrega', 'A caminho', 'Entregue', 'Cancelado'];
+    
+    // Filtrar apenas pedidos com status válidos
+    const validOrders = safeOrders.filter(order => validStatuses.includes(order.status));
+    
     const productCount: { [key: string]: { count: number; revenue: number } } = {};
     
-    safeOrders.forEach(order => {
+    validOrders.forEach(order => {
       (order.items || []).forEach(item => {
         if (!productCount[item.name]) {
           productCount[item.name] = { count: 0, revenue: 0 };
@@ -97,8 +118,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
     const safeOrders = orders || [];
     const safeDeliveryStaff = deliveryStaff || [];
     
+    // Lista de status válidos do sistema
+    const validStatuses = ['Novo', 'Preparando', 'Pronto para Entrega', 'A caminho', 'Entregue', 'Cancelado'];
+    
+    // Filtrar apenas pedidos com status válidos
+    const validOrders = safeOrders.filter(order => validStatuses.includes(order.status));
+    
     return safeDeliveryStaff.map(staff => {
-      const staffOrders = safeOrders.filter(order => 
+      const staffOrders = validOrders.filter(order => 
         order.deliveryPerson === (staff.name ? staff.name.split(' ')[0] : '') || // Adiciona verificação para staff.name
         order.assignedTo === staff.id ||
         order.firebaseId === staff.id
@@ -123,6 +150,13 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
   // Vendas por hora
   const salesByHour = useMemo(() => {
     const safeOrders = orders || [];
+    
+    // Lista de status válidos do sistema
+    const validStatuses = ['Novo', 'Preparando', 'Pronto para Entrega', 'A caminho', 'Entregue', 'Cancelado'];
+    
+    // Filtrar apenas pedidos com status válidos
+    const validOrders = safeOrders.filter(order => validStatuses.includes(order.status));
+    
     const hourlyData: { [key: string]: number } = {};
     
     // Inicializar todas as horas
@@ -130,7 +164,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
       hourlyData[i.toString().padStart(2, '0')] = 0;
     }
     
-    safeOrders.forEach(order => {
+    validOrders.forEach(order => {
       let hour = '12'; // Padrão
       
       if (order.createdAt) {
@@ -227,7 +261,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
       const pedidosData = [
         ['ID', 'Cliente', 'Telefone', 'Endereço', 'Status', 'Horário', 'Total', 'Código Rastreamento', 'Entregador']
       ];
-      orders.forEach((order) => {
+      
+      // Lista de status válidos do sistema
+      const validStatuses = ['Novo', 'Preparando', 'Pronto para Entrega', 'A caminho', 'Entregue', 'Cancelado'];
+      
+      // Filtrar apenas pedidos com status válidos
+      const validOrdersForExport = orders.filter(order => validStatuses.includes(order.status));
+      
+      validOrdersForExport.forEach((order) => {
         const total = (order.items || []).reduce((sum, item) => sum + (item.price || 0), 0);
         pedidosData.push([
           order.id,
@@ -346,18 +387,6 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
               <Package className="h-6 w-6" style={{ color: theme.primaryColor }} />
             </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 mr-1" style={{ color: theme.accentColor }} />
-            <span 
-              className="text-sm"
-              style={{ 
-                color: theme.accentColor,
-                fontFamily: theme.fontFamily
-              }}
-            >
-              +12% este mês
-            </span>
-          </div>
         </div>
 
         <div 
@@ -405,18 +434,6 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
             >
               <DollarSign className="h-6 w-6" style={{ color: theme.accentColor }} />
             </div>
-          </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 mr-1" style={{ color: theme.accentColor }} />
-            <span 
-              className="text-sm"
-              style={{ 
-                color: theme.accentColor,
-                fontFamily: theme.fontFamily
-              }}
-            >
-              +8% este mês
-            </span>
           </div>
         </div>
 
@@ -466,18 +483,6 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
               <BarChart3 className="h-6 w-6" style={{ color: theme.secondaryColor }} />
             </div>
           </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 mr-1" style={{ color: theme.accentColor }} />
-            <span 
-              className="text-sm"
-              style={{ 
-                color: theme.accentColor,
-                fontFamily: theme.fontFamily
-              }}
-            >
-              +5% este mês
-            </span>
-          </div>
         </div>
 
         <div 
@@ -525,18 +530,6 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
             >
               <MapPin className="h-6 w-6" style={{ color: theme.secondaryColor }} />
             </div>
-          </div>
-          <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 mr-1" style={{ color: theme.accentColor }} />
-            <span 
-              className="text-sm"
-              style={{ 
-                color: theme.accentColor,
-                fontFamily: theme.fontFamily
-              }}
-            >
-              +3% este mês
-            </span>
           </div>
         </div>
       </div>

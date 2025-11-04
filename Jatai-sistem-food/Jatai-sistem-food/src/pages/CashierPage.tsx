@@ -10,7 +10,6 @@ interface CashierPageProps {
 }
 
 const CashierPage: React.FC<CashierPageProps> = ({ orders, updateOrderStatus }) => {
-  const [activeTab, setActiveTab] = useState<'salao' | 'outros'>('salao');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Estados para controlar o modal de pagamento
@@ -28,20 +27,8 @@ const CashierPage: React.FC<CashierPageProps> = ({ orders, updateOrderStatus }) 
       ((order.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) || (order.id || '').includes(searchTerm))
     );
   }, [unpaidOrders, searchTerm]);
-
-  const outrosOrders = useMemo(() => {
-    return unpaidOrders.filter(order => 
-      order.address !== 'Consumo no local' &&
-      ((order.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) || (order.id || '').includes(searchTerm) || (order.phone || '').includes(searchTerm))
-    );
-  }, [unpaidOrders, searchTerm]);
-
   const totalSalao = useMemo(() => {
     return salaoOrders.reduce((acc, order) => acc + (order.total || 0), 0);
-  }, [salaoOrders]);
-
-  const totalOutros = useMemo(() => {
-    return outrosOrders.reduce((acc, order) => acc + (order.total || 0), 0);
   }, [outrosOrders]);
 
   const openPaymentModal = (orderId: string) => {
@@ -116,25 +103,6 @@ const CashierPage: React.FC<CashierPageProps> = ({ orders, updateOrderStatus }) 
     <div className="p-6 bg-gray-50 min-h-full">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Caixa - Cobrança de Pedidos</h2>
 
-      <div className="mb-6">
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab('salao')}
-            className={`flex items-center gap-2 py-3 px-6 font-medium transition-colors ${activeTab === 'salao' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            <Utensils size={18} />
-            Salão
-          </button>
-          <button
-            onClick={() => setActiveTab('outros')}
-            className={`flex items-center gap-2 py-3 px-6 font-medium transition-colors ${activeTab === 'outros' ? 'border-b-2 border-red-600 text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            <Truck size={18} />
-            Outros (Delivery/Retirada)
-          </button>
-        </div>
-      </div>
-
       {/* Resumo Financeiro */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -148,20 +116,9 @@ const CashierPage: React.FC<CashierPageProps> = ({ orders, updateOrderStatus }) 
             </div>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-full mr-4">
-              <Truck className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total a Receber (Outros)</p>
-              <p className="text-2xl font-bold text-gray-800">{formatCurrency(totalOutros)}</p>
-            </div>
-          </div>
-        </div>
         <div className="bg-green-600 text-white p-4 rounded-lg shadow-sm">
           <p className="text-sm opacity-80">Total Geral a Receber</p>
-          <p className="text-2xl font-bold">{formatCurrency(totalSalao + totalOutros)}</p>
+          <p className="text-2xl font-bold">{formatCurrency(totalSalao)}</p>
         </div>
       </div>
 
@@ -177,8 +134,7 @@ const CashierPage: React.FC<CashierPageProps> = ({ orders, updateOrderStatus }) 
       </div>
 
       <div>
-        {activeTab === 'salao' && renderOrderList(salaoOrders)}
-        {activeTab === 'outros' && renderOrderList(outrosOrders)}
+        {renderOrderList(salaoOrders)}
       </div>
 
       <PaymentModal

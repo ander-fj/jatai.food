@@ -74,6 +74,7 @@ const ORDER_STATUS_TABS = [
   { id: 'em-entrega', label: 'A caminho' },
   { id: 'entregues', label: 'Entregues' },
   { id: 'cancelados', label: 'Cancelados' },
+  { id: 'pagos', label: 'Pagos' },
 ] as const;
 
 const SIDEBAR_TABS = [
@@ -269,6 +270,7 @@ const AdminPage: React.FC = () => {
         'em-entrega': 'A caminho',
         'entregues': 'Entregue',
         'cancelados': 'Cancelado',
+        'pagos': 'Pago',
       };
 
       const mappedStatus = statusMap[newStatus];

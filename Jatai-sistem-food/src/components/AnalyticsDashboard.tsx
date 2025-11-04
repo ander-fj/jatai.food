@@ -66,8 +66,23 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
       'Preparando': safeOrders.filter(order => order.status === 'Preparando').length,
       'Pronto para Entrega': safeOrders.filter(order => order.status === 'Pronto para Entrega').length,
       'A caminho': safeOrders.filter(order => order.status === 'A caminho').length,
+      'Próximos': safeOrders.filter(order => {
+        const status = order.status;
+        return status === 'Próximos' || status === 'proximos' || status === 'PROXIMOS' || status === 'Proximos';
+      }).length,
       'Entregue': safeOrders.filter(order => order.status === 'Entregue').length,
-      'Cancelado': safeOrders.filter(order => order.status === 'Cancelado').length
+      'Cancelado': safeOrders.filter(order => order.status === 'Cancelado').length,
+      'Pago': safeOrders.filter(order => order.status === 'Pago').length,
+      'Outros': safeOrders.filter(order => 
+        order.status !== 'Novo' &&
+        order.status !== 'Preparando' &&
+        order.status !== 'Pronto para Entrega' &&
+        order.status !== 'A caminho' &&
+        !(order.status === 'Próximos' || order.status === 'proximos' || order.status === 'PROXIMOS' || order.status === 'Proximos') &&
+        order.status !== 'Entregue' &&
+        order.status !== 'Cancelado' &&
+        order.status !== 'Pago'
+      ).length
     };
   }, [orders]);
 
@@ -320,7 +335,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, deliver
                 className="text-sm font-medium text-gray-600"
                 style={{ fontFamily: theme.fontFamily }}
               >
-                Receita Total
+                Total de Pedidos
               </p>
               <p 
                 className="text-2xl font-bold"

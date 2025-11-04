@@ -14,6 +14,7 @@ import NewOrderModal from '../features/orders/components/NewOrderModal';
 import OrderDetailsModal from '../components/OrderDetailsModal';
 import MenuManagementSection from '../components/MenuManagementSection';
 import { useOrders } from '../features/orders/hooks/useOrders';
+import { useEntregadoresRealtime } from '../hooks/useEntregadoresRealtime';
 import { Order, NewOrder } from '../features/orders/types';
 import { useAuth } from '../hooks/useAuth';
 import { formatCurrency } from '../utils/formatters';
@@ -146,10 +147,54 @@ const AdminPage: React.FC = () => {
     assignDeliveryPerson,
     updateOrderStatus,
     getOrdersByStatus,
-    deliveryStaff,
+    deliveryStaff, // This is from the 'equipe' node in Firebase
     deleteOrder,
     deleteDeliveryStaff,
+    deliveryStaffOrderCount, // This contains the order counts
   } = useOrders();
+
+  const entregadoresRealtime = useEntregadoresRealtime(); // Real-time location and status
+
+  const combinedDeliveryStaff = React.useMemo(() => {
+    const staffMap = new Map();
+
+    // Add staff from useOrders (equipe)
+    deliveryStaff.forEach(staff => {
+      staffMap.set(staff.id, {
+        ...staff,
+        orderCount: deliveryStaffOrderCount[staff.id] || 0,
+        avatar: staff.avatar || '', // Ensure avatar is present
+      });
+    });
+
+    // Augment with real-time data, or add if not in equipe
+    entregadoresRealtime.forEach(realtimeStaff => {
+      const existingStaff = staffMap.get(realtimeStaff.id);
+      if (existingStaff) {
+        staffMap.set(realtimeStaff.id, {
+          ...existingStaff,
+          lat: realtimeStaff.lat,
+          lng: realtimeStaff.lng,
+          status: realtimeStaff.status,
+          avatar: realtimeStaff.avatar || existingStaff.avatar, // Prioritize realtime avatar if available
+        });
+      } else {
+        // If a delivery person is online but not in the 'equipe' list, add them
+        staffMap.set(realtimeStaff.id, {
+          id: realtimeStaff.id,
+          name: realtimeStaff.name,
+          orderCount: deliveryStaffOrderCount[realtimeStaff.id] || 0,
+          avatar: realtimeStaff.avatar || '',
+          lat: realtimeStaff.lat,
+          lng: realtimeStaff.lng,
+          status: realtimeStaff.status,
+          phone: '', // Default or fetch if needed
+        });
+      }
+    });
+
+    return Array.from(staffMap.values());
+  }, [deliveryStaff, entregadoresRealtime, deliveryStaffOrderCount]);
 
   const handleAreaSelected = (orderIds: string[]) => {
     setSelectedOrderIdsForAssignment(orderIds);
@@ -477,7 +522,7 @@ const AdminPage: React.FC = () => {
           </div>
           <div className={activeTab === 'cardapio' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><h2 className="text-2xl font-bold mb-4">Cardápio</h2><MenuManagementSection /></div></div>
           <div className={activeTab === 'promocoes' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><h2 className="text-2xl font-bold mb-4">Promoções via WhatsApp</h2><WhatsAppPromotionSection /></div></div>
-          <div className={activeTab === 'analytics' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><AnalyticsDashboard orders={orders} deliveryStaff={deliveryStaff} /></div></div>
+          <div className={activeTab === 'analytics' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><AnalyticsDashboard orders={orders} deliveryStaff={combinedDeliveryStaff} /></div></div>
           <div className={activeTab === 'piadas' ? '' : 'hidden'}><div className="p-6 bg-white rounded-lg shadow-sm"><h2 className="text-2xl font-bold mb-4">Gerenciamento de Piadas</h2><AdminJokesManagement /></div></div>
           <div className={activeTab === 'configuracoes' ? '' : 'hidden'}>
             <div className="p-6 bg-white rounded-lg shadow-sm">
