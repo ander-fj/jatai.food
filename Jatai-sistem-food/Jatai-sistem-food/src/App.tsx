@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from "react";
 import { useOrders } from './features/orders/hooks/useOrders';
-import TrackingPage from './pages/TrackingPage';
-import OrderHistoryPage from './pages/OrderHistoryPage';
-import DeliveryStatusPage from './pages/DeliveryStatusPage';
-import AdminPage from './pages/AdminPage';
-import CustomerOrderPage from './pages/CustomerOrderPage';
 import LocationStatusComponent from './components/LocationStatusComponent';
-import WaiterPage from './pages/WaiterPage';
-import ComandaPage from './pages/ComandaPage';
-import KitchenDisplayPage from './pages/KitchenDisplayPage';
-import ComandaHistoryPage from './pages/ComandaHistoryPage';
+
+const TrackingPage = lazy(() => import('./pages/TrackingPage'));
+const OrderHistoryPage = lazy(() => import('./pages/OrderHistoryPage'));
+const DeliveryStatusPage = lazy(() => import('./pages/DeliveryStatusPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const CustomerOrderPage = lazy(() => import('./pages/CustomerOrderPage'));
+const WaiterPage = lazy(() => import('./pages/WaiterPage'));
+const ComandaPage = lazy(() => import('./pages/ComandaPage'));
+const KitchenDisplayPage = lazy(() => import('./pages/KitchenDisplayPage'));
+const ComandaHistoryPage = lazy(() => import('./pages/ComandaHistoryPage'));
 import { useAuth } from './hooks/useAuth';
 import { startListeningToNewLocations } from "./utils/firebase-listener";
 
@@ -38,7 +39,8 @@ function App() {
 
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Routes>
+      <Suspense fallback={<div>Carregando...</div>}>
+        <Routes>
         <Route path="/" element={<TrackingPage />} />
         <Route path="/pedido" element={<CustomerOrderPage />} />
         <Route path="/meus-pedidos" element={<OrderHistoryPage />} />
@@ -94,7 +96,8 @@ function App() {
             </div>
           } 
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
