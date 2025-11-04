@@ -3,6 +3,7 @@ import { MessageCircle, Save, RefreshCw, CheckCircle, AlertCircle, Phone, Bot, P
 import { toast } from 'sonner';
 import { ref, set, get } from 'firebase/database';
 import { database } from '../config/firebase';
+import QRCode from 'qrcode';
 
 
 interface WhatsAppConfig {
@@ -205,7 +206,6 @@ const WhatsAppAttendanceSection: React.FC = () => {
         const data = await response.json();
         if (data.qr) {
           // Converter texto do QR para data URL usando biblioteca qrcode
-          const QRCode = (await import('qrcode')).default;
           const qrDataUrl = await QRCode.toDataURL(data.qr);
           setQrCode(qrDataUrl);
         } else {
