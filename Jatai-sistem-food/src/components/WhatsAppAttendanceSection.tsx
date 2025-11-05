@@ -205,9 +205,8 @@ const WhatsAppAttendanceSection: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.qr) {
-          // Converter texto do QR para data URL usando biblioteca qrcode
-          const qrDataUrl = await QRCode.toDataURL(data.qr);
-          setQrCode(qrDataUrl);
+          // Backend já envia o QR code como data URL (imagem), não precisa converter
+          setQrCode(data.qr);
         } else {
           setQrCode(null);
         }
