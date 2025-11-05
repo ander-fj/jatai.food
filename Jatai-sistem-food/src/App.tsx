@@ -17,6 +17,7 @@ function App() {
   const { username, isAuthenticated } = useAuth();
 
   useEffect(() => {
+    console.log('🚀 App iniciado com sucesso!');
     // Inicializar listeners do Firebase
     try {
       startListeningToNewLocations();
