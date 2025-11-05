@@ -217,6 +217,41 @@ const WhatsAppAttendanceSection: React.FC = () => {
     }
   };
 
+  const connectWhatsApp = async () => {
+    if (!username) return;
+    
+    setIsConnecting(true);
+    setQrCode(null);
+    
+    try {
+      const response = await fetch(`${WHATSAPP_SERVER_URL}/api/whatsapp/start/${username}`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success('Iniciando conexão com WhatsApp...');
+        
+        setConnectionStatus({
+          status: 'initializing',
+          isConnected: false,
+          hasQrCode: false
+        });
+        
+        setTimeout(() => {
+          fetchQrCode();
+        }, 2000);
+      } else {
+        toast.error('Erro ao iniciar conexão');
+        setIsConnecting(false);
+      }
+    } catch (error) {
+      console.error('Erro ao conectar WhatsApp:', error);
+      toast.error('Erro ao conectar WhatsApp');
+      setIsConnecting(false);
+    }
+  };
+
   const disconnectWhatsApp = async () => {
     if (!username) return;
     
