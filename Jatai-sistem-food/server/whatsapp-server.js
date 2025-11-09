@@ -764,3 +764,30 @@ app.listen(PORT, () => {
   console.log('   GET  /api/whatsapp/status/:username - Obter status');
   console.log('   POST /api/whatsapp/disconnect/:username - Desconectar');
 });
+const express = require('express');
+const cors = require('cors'); // 1. Importe o pacote que você instalou
+
+// ... outras importações como 'qrcode-terminal', 'whatsapp-web.js', etc.
+
+const app = express();
+const port = process.env.PORT || 3001;
+
+// 2. Defina as opções do CORS
+const corsOptions = {
+  // A origem (URL do seu frontend na Vercel) que tem permissão para acessar
+  origin: 'https://jataifood-alpha.vercel.app',
+  optionsSuccessStatus: 200 
+};
+
+// 3. Use o middleware do CORS no seu app Express
+app.use(cors(corsOptions));
+
+app.use(express.json()); // Esta linha provavelmente já existe
+
+// ... resto do seu código com as rotas (app.get, app.post, etc.) ...
+
+// ...
+
+app.listen(port, () => {
+  console.log(`🚀 Servidor WhatsApp rodando na porta ${port}`);
+});
