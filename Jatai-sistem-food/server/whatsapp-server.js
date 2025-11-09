@@ -9,8 +9,25 @@ const admin = require('firebase-admin');
 // Inicializar Express
 const app = express();
 
-// Habilita o CORS para todas as origens.
-app.use(cors());
+// Configuração do CORS
+const allowedOrigins = [
+  'https://jataifood-alpha.vercel.app',
+  'https://jatai-food-backend.onrender.com'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requisições sem 'origin' (ex: Postman, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política de CORS para este site não permite acesso da origem especificada.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Armazenar clientes WhatsApp por usuário
