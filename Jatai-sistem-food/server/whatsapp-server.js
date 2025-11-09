@@ -9,24 +9,8 @@ const admin = require('firebase-admin');
 // Inicializar Express
 const app = express();
 
-// Configuração explícita do CORS para produção e desenvolvimento
-const allowedOrigins = [
-  'https://jataifood-alpha.vercel.app', // URL do seu frontend em produção
-  'http://localhost:5173'             // URL comum para desenvolvimento local com Vite/React
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Permite requisições sem 'origin' (como Postman) ou se a origem estiver na lista
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-};
-
-app.use(cors(corsOptions));
+// Habilita o CORS para todas as origens.
+app.use(cors());
 app.use(express.json());
 
 // Armazenar clientes WhatsApp por usuário
