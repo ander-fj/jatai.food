@@ -27,6 +27,7 @@ const corsOptions = {
   }
 };
 
+app.options('*', cors(corsOptions)); // Habilita pre-flight para todas as rotas
 app.use(cors(corsOptions));
 app.use(express.json());
 
