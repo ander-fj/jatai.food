@@ -571,7 +571,6 @@ async function initializeWhatsAppClient(username) {
       }),
       puppeteer: {
         headless: true, // Alterado para 'true' para melhor performance e compatibilidade com servidores
-        executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Caminho para uma instalação estável do Chrome
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
