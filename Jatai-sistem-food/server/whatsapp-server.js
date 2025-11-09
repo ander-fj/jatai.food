@@ -18,20 +18,44 @@ const connectionStatus = new Map();
 const notifiedOfUnavailableAI = new Set(); // Rastreia usuários já notificados sobre a IA indisponível
 const conversationState = new Map(); // Armazena o estado da conversa para cada usuário
 
-// Inicializar Firebase Admin
-const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-if (!admin.apps.length && serviceAccountPath) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountPath),
-    databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://jataifood-default-rtdb.firebaseio.com'
-  });
-  console.log('✅ Firebase Admin SDK inicializado com sucesso a partir do arquivo de credenciais.');
-} else if (!serviceAccountPath) {
-  console.error('❌ ERRO CRÍTICO: A variável de ambiente GOOGLE_APPLICATION_CREDENTIALS não está definida no seu arquivo .env.');
-  console.error('O servidor não pode se conectar ao Firebase e não responderá às mensagens.');
-}
+let db = null; // Inicia o db como nulo. Será preenchido se a conexão for bem-sucedida.
 
-const db = admin.database();
+// Inicializar Firebase Admin
+if (!admin.apps.length) {
+  const { FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_DATABASE_URL } = process.env;
+
+  console.log('🔍 Tentando inicializar o Firebase Admin SDK...');
+  console.log(`- FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID ? 'Definido' : 'NÃO DEFINIDO'}`);
+  console.log(`- FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL ? 'Definido' : 'NÃO DEFINIDO'}`);
+  console.log(`- FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY ? 'Definido' : 'NÃO DEFINIDO'}`);
+  console.log(`- FIREBASE_DATABASE_URL: ${FIREBASE_DATABASE_URL || '(Usando fallback: https://dhl-teste-327e8-default-rtdb.firebaseio.com)'}`);
+
+  if (FIREBASE_PROJECT_ID && FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY) {
+    try {
+      const databaseURL = FIREBASE_DATABASE_URL || 'https://dhl-teste-327e8-default-rtdb.firebaseio.com';
+      const privateKey = FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+      const firebaseApp = admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: FIREBASE_PROJECT_ID,
+          clientEmail: FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+        databaseURL: databaseURL
+      });
+      db = firebaseApp.database(); // Atribui a conexão à variável db
+      console.log(`✅ Firebase Admin SDK inicializado com sucesso para o projeto: ${FIREBASE_PROJECT_ID} e database: ${databaseURL}`);
+    } catch (error) {
+      console.error('❌ ERRO CRÍTICO: Falha ao inicializar o Firebase Admin SDK. Verifique as variáveis de ambiente.');
+      console.error('- Detalhes do Erro:', error.message);
+      db = null; // Garante que o db seja nulo em caso de falha
+      console.warn('⚠️ O servidor continuará rodando em modo offline, usando dados de exemplo.');
+    } 
+  } else {
+    console.warn('⚠️ Variáveis de ambiente do Firebase não encontradas no arquivo .env.');
+    console.warn('O servidor rodará em modo offline, usando dados de exemplo.');
+    db = null;
+  }
+}
 
 // Função para gerar código de rastreamento
 function generateTrackingCode() {
@@ -45,6 +69,11 @@ function generateTrackingCode() {
 
 // Função para buscar o cardápio do Firebase
 async function getMenuFromFirebase(username) {
+  if (!db) {
+    console.warn('⚠️ Firebase não inicializado. Usando cardápio de exemplo.');
+    return 'Pizza de Calabresa, Pizza de Mussarela, Coca-Cola 2L';
+  }
+
   try {
     const menuRef = db.ref('tenants/' + username + '/products');
     const snapshot = await menuRef.once('value');
@@ -64,6 +93,17 @@ async function getMenuFromFirebase(username) {
 
 // Função para buscar informações da loja
 async function getBusinessInfoFromFirebase(username) {
+  if (!db) {
+    console.warn('⚠️ Firebase não inicializado. Usando informações de loja de exemplo.');
+    return {
+      restaurantName: 'Restaurante Exemplo',
+      welcomeMessage: 'Olá! Bem-vindo ao nosso restaurante.',
+      openingHours: '18h às 23h',
+      address: 'Rua Exemplo, 123',
+      contactPhone: '(00) 12345-6789',
+    };
+  }
+
   try {
     const infoRef = db.ref('tenants/' + username + '/whatsappConfig');
     const snapshot = await infoRef.once('value');
@@ -79,6 +119,15 @@ async function getBusinessInfoFromFirebase(username) {
 
 // Função para buscar o cardápio com preços do Firebase
 async function getMenuWithPrices(username) {
+  if (!db) {
+    console.warn('⚠️ Firebase não inicializado. Usando preços de exemplo.');
+    const menuMap = new Map();
+    menuMap.set("pizza de calabresa", 30.50);
+    menuMap.set("pizza de mussarela", 28.00);
+    menuMap.set("coca-cola 2l", 10.00);
+    return menuMap;
+  }
+
   try {
     const menuRef = db.ref('tenants/' + username + '/products');
     const snapshot = await menuRef.once('value');
@@ -204,6 +253,12 @@ async function processMessageWithGemini(message, menu, menuUrl, lastOrder, conve
 
 // Função para criar pedido no Firebase
 async function createOrderInFirebase(username, order, trackingCode, senderId) {
+  if (!db) {
+    console.warn('⚠️ Firebase não inicializado. Pedido não será salvo.');
+    console.log('Dados do pedido (não salvo):', { username, order, trackingCode, senderId });
+    return true; // Simula sucesso para que o bot responda ao cliente
+  }
+
   try {
     const orderData = {
       trackingCode,
@@ -248,6 +303,11 @@ async function createOrderInFirebase(username, order, trackingCode, senderId) {
 
 // Função para buscar configuração do Firebase
 async function getWhatsAppConfig(username) {
+  if (!db) {
+    console.warn('⚠️ Firebase não inicializado. Usando configuração de exemplo.');
+    return { isActive: true, menuUrl: `https://jataifood.vercel.app/pedido/${username}` };
+  }
+
   try {
     const configRef = db.ref('tenants/' + username + '/whatsappConfig');
     const snapshot = await configRef.once('value');
@@ -260,6 +320,11 @@ async function getWhatsAppConfig(username) {
 
 // Função para buscar o último pedido de um cliente
 async function getLastOrder(username, senderId) {
+  if (!db) {
+    console.warn('⚠️ Firebase não inicializado. Não é possível buscar o último pedido.');
+    return null;
+  }
+
   try {
     const ordersRef = db.ref('tenants/' + username + '/orders');
     const snapshot = await ordersRef.orderByChild('senderId').equalTo(senderId).limitToLast(1).once('value');
@@ -503,10 +568,12 @@ async function initializeWhatsAppClient(username) {
         dataPath: './whatsapp-sessions/' + username
       }),
       puppeteer: {
-        headless: false, // Mude para 'true' em produção
+        headless: true, // Alterado para 'true' para melhor performance e compatibilidade com servidores
+        executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Caminho para uma instalação estável do Chrome
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
+          '--disable-extensions',
           '--disable-dev-shm-usage',
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
